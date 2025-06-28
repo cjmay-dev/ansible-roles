@@ -1,0 +1,5 @@
+---
+- name: Install Infisical CLI
+  import_tasks: cli.yml
+
+# TODO: set up Infisical SSH
