@@ -1,0 +1,59 @@
+---
+- name: Install Docker
+  import_tasks: docker.yml
+
+- name: Create Docker image pruning script
+  copy:
+    content: |
+      #!/bin/bash
+      # Docker image pruning script
+      # Remove unused images, containers, networks, and build cache
+      
+      echo "$(date): Starting Docker cleanup"
+      
+      # Remove stopped containers
+      docker container prune -f
+      
+      # Remove unused images (dangling and unreferenced)
+      docker image prune -a -f
+      
+      # Remove unused networks
+      docker network prune -f
+      
+      # Remove build cache
+      docker builder prune -f
+      
+      echo "$(date): Docker cleanup completed"
+    dest: /usr/local/bin/docker-cleanup.sh
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Create root cron job for Docker image pruning
+  cron:
+    name: "Docker image and resource cleanup"
+    minute: "0"
+    hour: "2"
+    day: "*"
+    month: "*"
+    weekday: "0"
+    job: "/usr/local/bin/docker-cleanup.sh >> /var/log/docker-cleanup.log 2>&1"
+    user: root
+    state: present
+
+- name: Create log rotation for Docker cleanup log
+  copy:
+    content: |
+      /var/log/docker-cleanup.log {
+          weekly
+          rotate 4
+          compress
+          delaycompress
+          missingok
+          notifempty
+          create 644 root root
+      }
+    dest: /etc/logrotate.d/docker-cleanup
+    mode: '0644'
+    owner: root
+    group: root

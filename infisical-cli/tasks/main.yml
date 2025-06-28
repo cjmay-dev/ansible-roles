@@ -1,0 +1,33 @@
+---
+- name: Download Infisical CLI installation script
+  get_url:
+    url: https://artifacts-cli.infisical.com/setup.deb.sh
+    dest: /tmp/setup-infisical.sh
+    mode: '0755'
+
+- name: Add Infisical repository to apt sources
+  shell: /tmp/setup-infisical.sh
+  args:
+    creates: /usr/local/bin/infisical
+  register: infisical_install
+
+- name: Update package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install Infisical CLI
+  apt:
+    name:
+      infisical
+    state:
+      present
+
+- name: Verify Infisical CLI installation
+  command: infisical --version
+  changed_when: false
+
+- name: Clean up Infisical installation script
+  file:
+    path: /tmp/setup-infisical.sh
+    state: absent
