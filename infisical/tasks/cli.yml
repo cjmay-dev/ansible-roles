@@ -21,7 +21,7 @@
     name:
       infisical
     state:
-      present
+      latest
 
 - name: Verify Infisical CLI installation
   command: infisical --version
