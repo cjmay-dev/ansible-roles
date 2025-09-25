@@ -1,17 +1,24 @@
 ---
+- name: Check if Infisical apt source already exists
+  stat:
+    path: /etc/apt/sources.list.d/infisical.list
+  register: infisical_repo_file
+
 - name: Download Infisical CLI installation script
   get_url:
     url: https://artifacts-cli.infisical.com/setup.deb.sh
     dest: /tmp/setup-infisical.sh
     mode: '0755'
+  when: not infisical_repo_file.stat.exists
 
 - name: Add Infisical repository to apt sources
   shell: /tmp/setup-infisical.sh
   args:
     creates: /usr/local/bin/infisical
   register: infisical_install
+  when: not infisical_repo_file.stat.exists
 
-- name: Update package cache
+- name: Update package cache (only when adding Infisical repo)
   apt:
     update_cache: yes
     cache_valid_time: 3600
@@ -31,3 +38,4 @@
   file:
     path: /tmp/setup-infisical.sh
     state: absent
+  when: not infisical_repo_file.stat.exists
